@@ -17,13 +17,13 @@ REMOTE_PATH = "/Apps/remotely-save/Personal Vault"
 DEST_PATH = "/home/fareed/code/quartz/content"
 
 
-def get_remote_files(path: str) -> list[str]:
+def list_remote_files(path: str) -> list[str]:
     with dropbox.Dropbox(TOKEN) as dbx:
         result = dbx.files_list_folder(path, recursive=True)
         return [file.path_display for file in result.entries]
 
 
-def get_dest_files(path: str) -> list[str]:
+def list_dest_files(path: str) -> list[str]:
     return [str(x) for x in Path(path).rglob("*")]
 
 
