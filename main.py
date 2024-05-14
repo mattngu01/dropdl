@@ -41,15 +41,6 @@ def list_dest_dir(path: str) -> list[str]:
     return [str(x) for x in Path(path).rglob("*")]
 
 
-def get_diff(
-    remote_path: str, dest_path: str, remote_files: list[str], dest_files: list[str]
-) -> list[str]:
-    remote_files = set(x.removeprefix(remote_path) for x in remote_files)
-    dest_files = set(x.removeprefix(dest_path) for x in dest_files)
-
-    return list(remote_files.difference(dest_files))
-
-
 def download_folder(remote_path: str):
     dl_folder = tempfile.mkdtemp()
     print(f"Downloading to temporary dir '{dl_folder}'")
