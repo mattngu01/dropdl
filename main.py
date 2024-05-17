@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 import os
 import tempfile
-from contextlib import closing
+import shutil
 
 # Add OAuth2 access token here.
 # You can generate one for yourself in the App Console.
@@ -41,7 +41,7 @@ def list_dest_dir(path: str) -> list[str]:
     return [str(x) for x in Path(path).rglob("*")]
 
 
-def download_folder(remote_path: str):
+def download_folder(remote_path: str, dest_path: str) -> None:
     dl_folder = tempfile.mkdtemp()
     print(f"Downloading to temporary dir '{dl_folder}'")
     files = list_remote_files_recursive(remote_path)
@@ -67,6 +67,12 @@ def download_folder(remote_path: str):
             )
             print(f"Downloaded {file.path_display} to {dl_path}")
 
+    print("Moving files to destination")
+
+    shutil.copytree(dl_folder, dest_path)
+
+    # should clean up temp folder even if it fails?
+
 
 print("Dropbox")
 remote_files = list_remote_files_recursive(REMOTE_PATH)
@@ -77,6 +83,6 @@ dest_files = list_dest_dir(DEST_PATH)
 print(dest_files)
 
 print("\n\n")
-download_folder(REMOTE_PATH)
+download_folder(REMOTE_PATH, "temp")
 
 # should just download the whole directory, then copy it over to the content file while maintaining file metadata
