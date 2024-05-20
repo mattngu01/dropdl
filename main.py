@@ -9,6 +9,7 @@ import shutil
 import typer
 from typing_extensions import Annotated
 import concurrent.futures
+from rich.progress import Progress
 
 # Add OAuth2 access token here.
 # You can generate one for yourself in the App Console.
@@ -112,15 +113,22 @@ def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> N
         for d in dirs_to_create:
             os.mkdir(dl_folder + d)
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            for file in files:
-                executor.submit(
-                    download_file_with_metadata,
-                    dbx=dbx,
-                    file=file,
-                    remote_path=remote_path,
-                    dl_folder=dl_folder,
-                )
+        with Progress(transient=True) as progress:
+            task1 = progress.add_task("Downloading...", total=len(files))
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future_to_file = [
+                    executor.submit(
+                        download_file_with_metadata,
+                        dbx=dbx,
+                        file=file,
+                        remote_path=remote_path,
+                        dl_folder=dl_folder,
+                    )
+                    for file in files
+                ]
+
+                for _ in concurrent.futures.as_completed(future_to_file):
+                    progress.advance(task1)
 
         print("Moving files to destination")
 
