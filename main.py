@@ -124,6 +124,7 @@ def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> N
 @app.command("dl")
 def dl_folder_cmd(remote_path: str, dest_path: str) -> None:
     dbx = create_client(APP_KEY, APP_SECRET, ACCESS_TOKEN, REFRESH_TOKEN)
+    # TODO: option to remove existing destination folder
     download_folder(dbx, remote_path, dest_path)
 
 
