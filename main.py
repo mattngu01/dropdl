@@ -15,6 +15,8 @@ from typing_extensions import Annotated
 # See <https://blogs.dropbox.com/developers/2014/05/generate-an-access-token-for-your-own-account/>
 APP_KEY = os.getenv("DROPBOX_KEY")
 APP_SECRET = os.getenv("DROPBOX_SECRET")
+ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
+REFRESH_TOKEN = os.getenv("DROPBOX_REFRESH_TOKEN")
 EXCLUSIONS = [".*/Personal/.*", "_remotely-save-metadata-on-remote.json"]
 REMOTE_PATH = "/Apps/remotely-save/Personal Vault"
 
@@ -24,7 +26,11 @@ DEST_PATH = "/home/matt/garden/content"
 app = typer.Typer()
 
 
-def authorize(app_key: str, app_secret: str) -> dropbox.Dropbox:
+@app.command("auth")
+def get_tokens(
+    app_key: Annotated[str, typer.Argument(envvar="DROPBOX_KEY")],
+    app_secret: Annotated[str, typer.Argument(envvar="DROPBOX_SECRET")],
+) -> tuple[str]:
     auth_flow = DropboxOAuth2FlowNoRedirect(
         app_key, app_secret, token_access_type="offline"
     )
@@ -40,12 +46,26 @@ def authorize(app_key: str, app_secret: str) -> dropbox.Dropbox:
     except Exception as e:
         print("Error: %s" % (e,))
         exit(1)
+    print(
+        f"Run \n\nexport DROPBOX_ACCESS_TOKEN={oauth_result.access_token} DROPBOX_REFRESH_TOKEN={oauth_result.refresh_token}\n\n",
+        "to automatically authenticate without user prompt.",
+    )
 
-    # TODO: store access + refresh token on first time, and later use refresh token to recreate client
-    # first time can be separate command, that outputs the access & refresh token, which piped into an env can function on its own
+    return oauth_result.access_token, oauth_result.refresh_token
+
+
+def create_client(
+    app_key: str,
+    app_secret: str,
+    access_token: str | None = None,
+    refresh_token: str | None = None,
+) -> dropbox.Dropbox:
+    if access_token is None and refresh_token is None:
+        access_token, refresh_token = get_tokens(app_key, app_secret)
+
     return dropbox.Dropbox(
-        oauth2_access_token=oauth_result.access_token,
-        oauth2_refresh_token=oauth_result.refresh_token,
+        oauth2_access_token=access_token,
+        oauth2_refresh_token=refresh_token,
         app_key=app_key,
         app_secret=app_secret,
     )
@@ -103,13 +123,13 @@ def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> N
 
 @app.command("dl")
 def dl_folder_cmd(remote_path: str, dest_path: str) -> None:
-    dbx = authorize(APP_KEY, APP_SECRET)
+    dbx = create_client(APP_KEY, APP_SECRET, ACCESS_TOKEN, REFRESH_TOKEN)
     download_folder(dbx, remote_path, dest_path)
 
 
 @app.command("ls")
 def ls_cmd(path: str, include_dirs: Annotated[bool, typer.Option()] = True) -> None:
-    dbx = authorize(APP_KEY, APP_SECRET)
+    dbx = create_client(APP_KEY, APP_SECRET, ACCESS_TOKEN, REFRESH_TOKEN)
 
     result = get_remote_files_metadata_recursive(dbx, path)
     result = [x.path_display for x in result]
