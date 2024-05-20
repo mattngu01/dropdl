@@ -97,7 +97,6 @@ def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> N
 
     print("Removing temp folder", dl_folder)
     shutil.rmtree(dl_folder)
-    # should clean up temp folder even if it fails?
 
 
 dbx = authorize(APP_KEY, APP_SECRET)
@@ -112,5 +111,3 @@ print(dest_files)
 print("\n\n")
 download_folder(dbx, REMOTE_PATH, "temp")
 dbx.close()
-
-# should just download the whole directory, then copy it over to the content file while maintaining file metadata
