@@ -8,6 +8,7 @@ import os
 import tempfile
 import shutil
 import typer
+from typing_extensions import Annotated
 
 # Add OAuth2 access token here.
 # You can generate one for yourself in the App Console.
@@ -109,7 +110,7 @@ def dl_folder_cmd(remote_path: str, dest_path: str) -> None:
 
 
 @app.command("ls")
-def ls_cmd(path: str, include_dirs=True) -> None:
+def ls_cmd(path: str, include_dirs: Annotated[bool, typer.Option()] = True) -> None:
     dbx = authorize(APP_KEY, APP_SECRET)
 
     result = list_remote_files_recursive(dbx, path)
@@ -117,7 +118,8 @@ def ls_cmd(path: str, include_dirs=True) -> None:
 
     if include_dirs:
         result.extend(list_remote_dirs_recursive(dbx, path))
-        result.sort()
+
+    result.sort()
 
     for f in result:
         print(f)
