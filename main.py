@@ -51,12 +51,14 @@ def authorize(app_key: str, app_secret: str) -> dropbox.Dropbox:
     )
 
 
-def list_remote_files_recursive(dbx: dropbox.Dropbox, path: str) -> list[FileMetadata]:
+def get_remote_files_metadata_recursive(
+    dbx: dropbox.Dropbox, path: str
+) -> list[FileMetadata]:
     result = dbx.files_list_folder(path, recursive=True)
     return [file for file in result.entries if isinstance(file, FileMetadata)]
 
 
-def list_remote_dirs_recursive(dbx: dropbox.Dropbox, path: str) -> list[str]:
+def list_remote_dir_names_recursive(dbx: dropbox.Dropbox, path: str) -> list[str]:
     result = dbx.files_list_folder(path, recursive=True)
     return [
         file.path_display
@@ -68,10 +70,10 @@ def list_remote_dirs_recursive(dbx: dropbox.Dropbox, path: str) -> list[str]:
 def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> None:
     dl_folder = tempfile.mkdtemp()
     print(f"Downloading to temporary dir '{dl_folder}'")
-    files = list_remote_files_recursive(dbx, remote_path)
+    files = get_remote_files_metadata_recursive(dbx, remote_path)
     dirs_to_create = [
         d.removeprefix(REMOTE_PATH)
-        for d in list_remote_dirs_recursive(dbx, remote_path)
+        for d in list_remote_dir_names_recursive(dbx, remote_path)
     ]
 
     for d in dirs_to_create:
@@ -109,11 +111,11 @@ def dl_folder_cmd(remote_path: str, dest_path: str) -> None:
 def ls_cmd(path: str, include_dirs: Annotated[bool, typer.Option()] = True) -> None:
     dbx = authorize(APP_KEY, APP_SECRET)
 
-    result = list_remote_files_recursive(dbx, path)
+    result = get_remote_files_metadata_recursive(dbx, path)
     result = [x.path_display for x in result]
 
     if include_dirs:
-        result.extend(list_remote_dirs_recursive(dbx, path))
+        result.extend(list_remote_dir_names_recursive(dbx, path))
 
     result.sort()
 
