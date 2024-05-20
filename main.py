@@ -8,6 +8,7 @@ import tempfile
 import shutil
 import typer
 from typing_extensions import Annotated
+import concurrent.futures
 
 # Add OAuth2 access token here.
 # You can generate one for yourself in the App Console.
@@ -81,8 +82,24 @@ def list_remote_dir_names_recursive(dbx: dropbox.Dropbox, path: str) -> list[str
     ]
 
 
+def download_file_with_metadata(
+    dbx: dropbox.Dropbox, file: FileMetadata, remote_path: str, dl_folder: str
+) -> None:
+    stripped = file.path_display.removeprefix(remote_path)
+    dl_path = dl_folder + stripped
+
+    dbx.files_download_to_file(download_path=dl_path, path=file.path_display)
+    os.utime(
+        dl_path,
+        times=(
+            file.client_modified.timestamp(),
+            file.client_modified.timestamp(),
+        ),
+    )
+    print(f"Downloaded {file.path_display} to {dl_path}")
+
+
 def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> None:
-    # TODO: multithreaded
     dl_folder = tempfile.mkdtemp()
     print(f"Downloading to temporary dir '{dl_folder}'")
     try:
@@ -95,19 +112,15 @@ def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> N
         for d in dirs_to_create:
             os.mkdir(dl_folder + d)
 
-        for file in files:
-            stripped = file.path_display.removeprefix(remote_path)
-            dl_path = dl_folder + stripped
-
-            dbx.files_download_to_file(download_path=dl_path, path=file.path_display)
-            os.utime(
-                dl_path,
-                times=(
-                    file.client_modified.timestamp(),
-                    file.client_modified.timestamp(),
-                ),
-            )
-            print(f"Downloaded {file.path_display} to {dl_path}")
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for file in files:
+                executor.submit(
+                    download_file_with_metadata,
+                    dbx=dbx,
+                    file=file,
+                    remote_path=remote_path,
+                    dl_folder=dl_folder,
+                )
 
         print("Moving files to destination")
 
