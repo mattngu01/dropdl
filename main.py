@@ -7,6 +7,7 @@ from pathlib import Path
 import os
 import tempfile
 import shutil
+import typer
 
 # Add OAuth2 access token here.
 # You can generate one for yourself in the App Console.
@@ -18,6 +19,8 @@ REMOTE_PATH = "/Apps/remotely-save/Personal Vault"
 
 # relative location...?
 DEST_PATH = "/home/matt/garden/content"
+
+app = typer.Typer()
 
 
 def authorize(app_key: str, app_secret: str) -> dropbox.Dropbox:
@@ -99,15 +102,39 @@ def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> N
     shutil.rmtree(dl_folder)
 
 
-dbx = authorize(APP_KEY, APP_SECRET)
-print("Dropbox")
-remote_files = list_remote_files_recursive(dbx, REMOTE_PATH)
-print(remote_files)
+@app.command("dl")
+def dl_folder_cmd(remote_path: str, dest_path: str) -> None:
+    dbx = authorize(APP_KEY, APP_SECRET)
+    download_folder(dbx, remote_path, dest_path)
 
-print("DIR")
-dest_files = list_dest_dir(DEST_PATH)
-print(dest_files)
 
-print("\n\n")
-download_folder(dbx, REMOTE_PATH, "temp")
-dbx.close()
+@app.command("ls")
+def ls_cmd(path: str, include_dirs=True) -> None:
+    dbx = authorize(APP_KEY, APP_SECRET)
+
+    result = list_remote_files_recursive(dbx, path)
+    result = [x.path_display for x in result]
+
+    if include_dirs:
+        result.extend(list_remote_dirs_recursive(dbx, path))
+        result.sort()
+
+    for f in result:
+        print(f)
+
+
+# dbx = authorize(APP_KEY, APP_SECRET)
+# print("Dropbox")
+# remote_files = list_remote_files_recursive(dbx, REMOTE_PATH)
+# print(remote_files)
+#
+# print("DIR")
+# dest_files = list_dest_dir(DEST_PATH)
+# print(dest_files)
+#
+# print("\n\n")
+# download_folder(dbx, REMOTE_PATH, "temp")
+# dbx.close()
+
+if __name__ == "__main__":
+    app()
