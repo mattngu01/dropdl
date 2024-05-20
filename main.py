@@ -3,7 +3,6 @@
 import dropbox
 from dropbox import DropboxOAuth2FlowNoRedirect
 from dropbox.files import FileMetadata
-from pathlib import Path
 import os
 import tempfile
 import shutil
@@ -17,11 +16,6 @@ APP_KEY = os.getenv("DROPBOX_KEY")
 APP_SECRET = os.getenv("DROPBOX_SECRET")
 ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
 REFRESH_TOKEN = os.getenv("DROPBOX_REFRESH_TOKEN")
-EXCLUSIONS = [".*/Personal/.*", "_remotely-save-metadata-on-remote.json"]
-REMOTE_PATH = "/Apps/remotely-save/Personal Vault"
-
-# relative location...?
-DEST_PATH = "/home/matt/garden/content"
 
 app = typer.Typer()
 
@@ -92,7 +86,7 @@ def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> N
     print(f"Downloading to temporary dir '{dl_folder}'")
     files = get_remote_files_metadata_recursive(dbx, remote_path)
     dirs_to_create = [
-        d.removeprefix(REMOTE_PATH)
+        d.removeprefix(remote_path)
         for d in list_remote_dir_names_recursive(dbx, remote_path)
     ]
 
@@ -100,7 +94,7 @@ def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> N
         os.mkdir(dl_folder + d)
 
     for file in files:
-        stripped = file.path_display.removeprefix(REMOTE_PATH)
+        stripped = file.path_display.removeprefix(remote_path)
         dl_path = dl_folder + stripped
 
         dbx.files_download_to_file(download_path=dl_path, path=file.path_display)
