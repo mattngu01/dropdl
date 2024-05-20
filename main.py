@@ -94,6 +94,8 @@ def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> N
 
     shutil.copytree(dl_folder, dest_path)
 
+    print("Removing temp folder", dl_folder)
+    shutil.rmtree(dl_folder)
     # should clean up temp folder even if it fails?
 
 
