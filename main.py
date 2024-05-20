@@ -65,10 +65,6 @@ def list_remote_dirs_recursive(dbx: dropbox.Dropbox, path: str) -> list[str]:
     ]
 
 
-def list_dest_dir(path: str) -> list[str]:
-    return [str(x) for x in Path(path).rglob("*")]
-
-
 def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> None:
     dl_folder = tempfile.mkdtemp()
     print(f"Downloading to temporary dir '{dl_folder}'")
@@ -124,19 +120,6 @@ def ls_cmd(path: str, include_dirs: Annotated[bool, typer.Option()] = True) -> N
     for f in result:
         print(f)
 
-
-# dbx = authorize(APP_KEY, APP_SECRET)
-# print("Dropbox")
-# remote_files = list_remote_files_recursive(dbx, REMOTE_PATH)
-# print(remote_files)
-#
-# print("DIR")
-# dest_files = list_dest_dir(DEST_PATH)
-# print(dest_files)
-#
-# print("\n\n")
-# download_folder(dbx, REMOTE_PATH, "temp")
-# dbx.close()
 
 if __name__ == "__main__":
     app()
