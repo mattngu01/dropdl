@@ -38,6 +38,7 @@ def authorize(app_key: str, app_secret: str) -> dropbox.Dropbox:
         exit(1)
 
     # TODO: store access + refresh token on first time, and later use refresh token to recreate client
+    # first time can be separate command, that outputs the access & refresh token, which piped into an env can function on its own
     return dropbox.Dropbox(
         oauth2_access_token=oauth_result.access_token,
         oauth2_refresh_token=oauth_result.refresh_token,
