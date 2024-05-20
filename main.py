@@ -82,37 +82,39 @@ def list_remote_dir_names_recursive(dbx: dropbox.Dropbox, path: str) -> list[str
 
 
 def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> None:
+    # TODO: multithreaded
     dl_folder = tempfile.mkdtemp()
     print(f"Downloading to temporary dir '{dl_folder}'")
-    files = get_remote_files_metadata_recursive(dbx, remote_path)
-    dirs_to_create = [
-        d.removeprefix(remote_path)
-        for d in list_remote_dir_names_recursive(dbx, remote_path)
-    ]
+    try:
+        files = get_remote_files_metadata_recursive(dbx, remote_path)
+        dirs_to_create = [
+            d.removeprefix(remote_path)
+            for d in list_remote_dir_names_recursive(dbx, remote_path)
+        ]
 
-    for d in dirs_to_create:
-        os.mkdir(dl_folder + d)
+        for d in dirs_to_create:
+            os.mkdir(dl_folder + d)
 
-    for file in files:
-        stripped = file.path_display.removeprefix(remote_path)
-        dl_path = dl_folder + stripped
+        for file in files:
+            stripped = file.path_display.removeprefix(remote_path)
+            dl_path = dl_folder + stripped
 
-        dbx.files_download_to_file(download_path=dl_path, path=file.path_display)
-        os.utime(
-            dl_path,
-            times=(
-                file.client_modified.timestamp(),
-                file.client_modified.timestamp(),
-            ),
-        )
-        print(f"Downloaded {file.path_display} to {dl_path}")
+            dbx.files_download_to_file(download_path=dl_path, path=file.path_display)
+            os.utime(
+                dl_path,
+                times=(
+                    file.client_modified.timestamp(),
+                    file.client_modified.timestamp(),
+                ),
+            )
+            print(f"Downloaded {file.path_display} to {dl_path}")
 
-    print("Moving files to destination")
+        print("Moving files to destination")
 
-    shutil.copytree(dl_folder, dest_path)
-
-    print("Removing temp folder", dl_folder)
-    shutil.rmtree(dl_folder)
+        shutil.copytree(dl_folder, dest_path)
+    finally:
+        print("Removing temp folder", dl_folder)
+        shutil.rmtree(dl_folder)
 
 
 @app.command("dl")
