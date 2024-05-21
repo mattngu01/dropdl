@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 
+import concurrent.futures
+import os
+import shutil
+import tempfile
+
 import dropbox
+import typer
 from dropbox import DropboxOAuth2FlowNoRedirect
 from dropbox.files import FileMetadata
-import os
-import tempfile
-import shutil
-import typer
-from typing_extensions import Annotated
-import concurrent.futures
 from rich.progress import Progress
+from typing_extensions import Annotated
 
 # Add OAuth2 access token here.
 # You can generate one for yourself in the App Console.
