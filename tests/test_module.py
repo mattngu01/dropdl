@@ -3,7 +3,7 @@ import datetime
 import dropbox
 from dropbox.files import FileMetadata, FolderMetadata, ListFolderResult
 
-from main import (
+from dropdl.main import (
     create_client,
     dl_folder_cmd,
     download_file_with_metadata,
@@ -37,9 +37,10 @@ def test_get_tokens(mocker):
 
 def test_create_client(mocker):
     mock_get_tokens = mocker.patch(
-        "main.get_tokens", return_value=("test_access_token", "test_refresh_token")
+        "dropdl.main.get_tokens",
+        return_value=("test_access_token", "test_refresh_token"),
     )
-    mock_dropbox = mocker.patch("main.dropbox.Dropbox")
+    mock_dropbox = mocker.patch("dropdl.main.dropbox.Dropbox")
 
     app_key = "test_app_key"
     app_secret = "test_app_secret"
@@ -112,10 +113,10 @@ def test_download_file_with_metadata(mocker):
 def test_download_folder(mocker):
     mock_mkdtemp = mocker.patch("tempfile.mkdtemp", return_value="/test_dl_folder")
     mock_list_dirs = mocker.patch(
-        "main.list_remote_dir_names_recursive", return_value=[]
+        "dropdl.main.list_remote_dir_names_recursive", return_value=[]
     )
     mock_get_files = mocker.patch(
-        "main.get_remote_files_metadata_recursive", return_value=[]
+        "dropdl.main.get_remote_files_metadata_recursive", return_value=[]
     )
     mock_copytree = mocker.patch("shutil.copytree")
     mock_rmtree = mocker.patch("shutil.rmtree")
@@ -134,8 +135,8 @@ def test_download_folder(mocker):
 
 
 def test_dl_folder_cmd(mocker):
-    mock_create_client = mocker.patch("main.create_client")
-    mock_download_folder = mocker.patch("main.download_folder")
+    mock_create_client = mocker.patch("dropdl.main.create_client")
+    mock_download_folder = mocker.patch("dropdl.main.download_folder")
 
     remote_path = "/test_remote_path"
     dest_path = "/test_dest_path"
@@ -149,12 +150,12 @@ def test_dl_folder_cmd(mocker):
 
 
 def test_ls_cmd(mocker):
-    mock_create_client = mocker.patch("main.create_client")
+    mock_create_client = mocker.patch("dropdl.main.create_client")
     mock_get_files = mocker.patch(
-        "main.get_remote_files_metadata_recursive", return_value=[]
+        "dropdl.main.get_remote_files_metadata_recursive", return_value=[]
     )
     mock_list_dirs = mocker.patch(
-        "main.list_remote_dir_names_recursive", return_value=[]
+        "dropdl.main.list_remote_dir_names_recursive", return_value=[]
     )
 
     path = "/test_path"

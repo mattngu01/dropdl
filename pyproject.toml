@@ -1,2 +1,20 @@
 [project]
+name = "dropdl"
+authors = [
+    { name="Matthew Nguyen", email="nguyen.matthewq@gmail.com" }
+]
+description="CLI app to download Dropbox files for backup"
+readme="README.md"
 requires-python = ">=3.10"
+dynamic = ["version"]
+
+[project.scripts]
+dropdl = "dropdl.main:app"
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "dropdl/__init__.py"
