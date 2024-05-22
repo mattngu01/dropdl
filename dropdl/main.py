@@ -101,7 +101,9 @@ def download_file_with_metadata(
     print(f"Downloaded {file.path_display} to {dl_path}")
 
 
-def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> None:
+def download_folder(
+    dbx: dropbox.Dropbox, remote_path: str, dest_path: str, merge: bool
+) -> None:
     dl_folder = tempfile.mkdtemp()
     print(f"Downloading to temporary dir '{dl_folder}'")
     try:
@@ -133,17 +135,30 @@ def download_folder(dbx: dropbox.Dropbox, remote_path: str, dest_path: str) -> N
 
         print("Moving files to destination")
 
-        shutil.copytree(dl_folder, dest_path)
+        if os.path.exists(dest_path) and not merge:  # we want to replace
+            shutil.rmtree(dest_path)
+
+        shutil.copytree(dl_folder, dest_path, dirs_exist_ok=merge)
+
     finally:
         print("Removing temp folder", dl_folder)
         shutil.rmtree(dl_folder)
 
 
 @app.command("dl")
-def dl_folder_cmd(remote_path: str, dest_path: str) -> None:
+def dl_folder_cmd(
+    remote_path: str,
+    dest_path: str,
+    merge: Annotated[
+        bool,
+        typer.Option(
+            "--merge/--replace",
+            help="If the dest exists, merge / remove & replace dest.",
+        ),
+    ] = False,
+) -> None:
     dbx = create_client(APP_KEY, APP_SECRET, ACCESS_TOKEN, REFRESH_TOKEN)
-    # TODO: option to remove existing destination folder
-    download_folder(dbx, remote_path, dest_path)
+    download_folder(dbx, remote_path, dest_path, merge)
 
 
 @app.command("ls")

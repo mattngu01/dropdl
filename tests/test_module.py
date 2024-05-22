@@ -2,6 +2,7 @@ import datetime
 
 import dropbox
 from dropbox.files import FileMetadata, FolderMetadata, ListFolderResult
+from unittest.mock import call
 
 from dropdl.main import (
     create_client,
@@ -120,32 +121,55 @@ def test_download_folder(mocker):
     )
     mock_copytree = mocker.patch("shutil.copytree")
     mock_rmtree = mocker.patch("shutil.rmtree")
+    mocker.patch("os.path.exists", return_value=False)
 
     dbx = mocker.Mock()
     remote_path = "/test_path"
     dest_path = "/test_dest_path"
 
-    download_folder(dbx, remote_path, dest_path)
+    download_folder(dbx, remote_path, dest_path, merge=True)
 
     mock_mkdtemp.assert_called_once()
     mock_list_dirs.assert_called_once_with(dbx, remote_path)
     mock_get_files.assert_called_once_with(dbx, remote_path)
-    mock_copytree.assert_called_once_with("/test_dl_folder", dest_path)
+    mock_copytree.assert_called_once_with(
+        "/test_dl_folder", dest_path, dirs_exist_ok=True
+    )
     mock_rmtree.assert_called_once_with("/test_dl_folder")
+
+
+def test_download_folder_replace(mocker):
+    # we need this mocked out to not have any side effects
+    # ruff doesn't seem to have ability to disable checks for a whole function
+    mocker.patch("tempfile.mkdtemp", return_value="/test_dl_folder")
+    mocker.patch("dropdl.main.list_remote_dir_names_recursive", return_value=[])
+    mocker.patch("dropdl.main.get_remote_files_metadata_recursive", return_value=[])
+    mocker.patch("shutil.copytree")
+    mocker.patch("os.path.exists", return_value=True)
+    mock_rmtree = mocker.patch("shutil.rmtree")
+
+    dbx = mocker.Mock()
+    remote_path = "/test_path"
+    dest_path = "/test_dest_path"
+
+    download_folder(dbx, remote_path, dest_path, merge=False)
+
+    mock_rmtree.assert_has_calls([call("/test_dest_path"), call("/test_dl_folder")])
 
 
 def test_dl_folder_cmd(mocker):
     mock_create_client = mocker.patch("dropdl.main.create_client")
     mock_download_folder = mocker.patch("dropdl.main.download_folder")
+    mocker.patch("os.path.exists", return_value=False)
 
     remote_path = "/test_remote_path"
     dest_path = "/test_dest_path"
 
-    dl_folder_cmd(remote_path, dest_path)
+    dl_folder_cmd(remote_path, dest_path, False)
 
     mock_create_client.assert_called_once()
     mock_download_folder.assert_called_once_with(
-        mock_create_client.return_value, remote_path, dest_path
+        mock_create_client.return_value, remote_path, dest_path, False
     )
 
 
