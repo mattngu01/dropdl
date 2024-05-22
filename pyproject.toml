@@ -6,15 +6,18 @@ authors = [
 description="CLI app to download Dropbox files for backup"
 readme="README.md"
 requires-python = ">=3.10"
-dynamic = ["version"]
+dynamic = ["version", "dependencies"]
 
 [project.scripts]
 dropdl = "dropdl.main:app"
 
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-requirements-txt"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
 path = "dropdl/__init__.py"
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]
