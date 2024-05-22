@@ -1,3 +1,23 @@
+# Installation & Usage
+
+```shell
+$ pip install https://github.com/mattngu01/dropdl/releases/download/v0.1.1/dropdl-0.1.1-py3-none-any.whl
+$ dropdl --help
+
+ Usage: dropdl [OPTIONS] COMMAND [ARGS]...
+
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --install-completion          Install completion for the current shell.                                              │
+│ --show-completion             Show completion for the current shell, to copy it or customize the installation.       │
+│ --help                        Show this message and exit.                                                            │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ auth                                                                                                                 │
+│ dl                                                                                                                   │
+│ ls                                                                                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+
 # Authorization
 
 You will need to [create a developer app](https://www.dropbox.com/developers/apps).
